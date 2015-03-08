@@ -19,7 +19,7 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
 
     @IBOutlet weak var tableView: UITableView!
     var button : UIButton!
-    var available : [(String, String)]?
+    var available : [Opinion]?
     var reloading : Bool?
     var fetching : [String] = []
 
@@ -40,8 +40,8 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         self.button.enabled = false
         println("RELOAD")
         self.reloading = true
-        Fetcher.instance().fetchPairs { (pairs) -> () in
-            self.available = pairs
+        Fetcher.instance().fetchAvailableOpinions { (opinions) -> () in
+            self.available = opinions
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 self.reloading = false
                 self.button.enabled = true
@@ -54,11 +54,27 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         return indexPath.section > 0
     }
 
+    func tableView(tableView: UITableView, accessoryButtonTappedForRowWithIndexPath indexPath: NSIndexPath) {
+        if let section = FirstSection(rawValue: indexPath.section) {
+            if (section == .Available) {
+                if let opinion = self.available?[indexPath.row] {
+                    var name = opinion.name ?? ""
+                    var docket = opinion.docket ?? ""
+                    var alert = UIAlertController(title: "\(docket): \(name)", message: opinion.summary, preferredStyle: UIAlertControllerStyle.Alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: { (action) -> Void in
+                        self.dismissViewControllerAnimated(true, completion: nil)
+                    }))
+                    self.presentViewController(alert, animated: true, completion: nil)
+                }
+            }
+        }
+    }
+
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         if (indexPath.section == 1) {
-            if let href = self.available?[indexPath.row].0 {
-                if (!contains(self.fetching, href)) {
-                    self.fetching.append(href)
+            if let docket = self.available?[indexPath.row].docket {
+                if (!contains(self.fetching, docket)) {
+                    self.fetching.append(docket)
                     var cell = tableView.cellForRowAtIndexPath(indexPath)
                     cell?.accessoryType = .DetailButton
                 }
@@ -79,13 +95,12 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
             let yConstraint = NSLayoutConstraint(item: cell, attribute: NSLayoutAttribute.CenterY, relatedBy: NSLayoutRelation.Equal, toItem: button, attribute: NSLayoutAttribute.CenterY, multiplier: 1.0, constant: 0.0)
             cell.addConstraint(yConstraint)
         } else {
-            if let pair = self.available?[indexPath.row] {
-                cell.textLabel?.text = pair.1
-                var accessory : UITableViewCellAccessoryType = .None
-                if (contains(self.fetching, pair.0)) {
-                    accessory = .DetailButton
+            if let opinion = self.available?[indexPath.row] {
+                cell.textLabel?.text = opinion.name
+                cell.accessoryType = .DetailButton
+                if (contains(self.fetching, opinion.docket ?? "d")) {
+//                    accessory =
                 }
-                cell.accessoryType = accessory
             }
         }
 

@@ -10,11 +10,16 @@ import Foundation
 
 class Opinion {
     var sequence : Int?,
-    date : NSDate?,
+    date : String?,
     docket : String?,
     name : String?,
     summary : String?,
     author : String?,
     volumePrint : String?,
     href : NSURL?
+
+    init() {
+        //
+    }
+
 }

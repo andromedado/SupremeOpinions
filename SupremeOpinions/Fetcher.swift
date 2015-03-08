@@ -24,13 +24,13 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate
         self.session = NSURLSession(configuration: nil, delegate: self, delegateQueue: nil)
     }
 
-    func fetchPairs (completionBlock: (pairs:[(String, String)]) -> ()) -> () {
+    func fetchAvailableOpinions (completionBlock: (opinions:[Opinion]) -> ()) -> () {
         let task = self.session.dataTaskWithURL(self.slipsURL, completionHandler: { (data, res, err) -> Void in
-            completionBlock(pairs: [("fizz", "buzz")])
-            println("ECOMPLATION")
+            var opinions : [Opinion] = []
             if let resStr = NSString(data: data, encoding: NSUTF8StringEncoding) {
-                Extractor.extract(resStr)
+                opinions = Extractor.extract(resStr)
             }
+            completionBlock(opinions: opinions)
         })
         task.resume()
     }
