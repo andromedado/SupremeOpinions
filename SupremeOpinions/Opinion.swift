@@ -8,10 +8,7 @@
 
 import Foundation
 
-private let rootDir = NSFileManager.defaultManager().URLsForDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)[0] as NSURL
-private let opinionDir = rootDir.URLByAppendingPathComponent("opinions").path!
-
-class Opinion {
+class Opinion : NSObject, NSCoding {
     var sequence : Int?,
     date : String?,
     docket : String?,
@@ -21,15 +18,25 @@ class Opinion {
     volumePrint : String?,
     href : NSURL?
 
-    init() {
-        var isDir : ObjCBool = true
-        if (!NSFileManager.defaultManager().fileExistsAtPath(opinionDir, isDirectory: &isDir)) {
-            NSFileManager.defaultManager().createDirectoryAtPath(opinionDir, withIntermediateDirectories: true, attributes: nil, error: nil)
-        }
+    override init() {
+        super.init()
+    }
+
+    required init(coder aDecoder: NSCoder) {
+        super.init()
+        self.sequence = aDecoder.decodeObjectForKey("sequence") as? Int
+        self.date = aDecoder.decodeObjectForKey("date") as? String
+        self.docket = aDecoder.decodeObjectForKey("docket") as? String
+        self.name = aDecoder.decodeObjectForKey("name") as? String
+        self.summary = aDecoder.decodeObjectForKey("summary") as? String
+        self.author = aDecoder.decodeObjectForKey("author") as? String
+        self.volumePrint = aDecoder.decodeObjectForKey("volumePrint") as? String
+        self.href = aDecoder.decodeObjectForKey("href") as? NSURL
     }
 
     var filePath : String {
         get {
+            let opinionDir = FileManager.instance().opinionDir
             if let docket = self.docket {
                 return opinionDir.stringByAppendingPathComponent("\(docket).pdf")
             }
@@ -59,4 +66,14 @@ class Opinion {
         }
     }
 
+    func encodeWithCoder(aCoder: NSCoder) {
+        aCoder.encodeObject(self.sequence, forKey: "sequence")
+        aCoder.encodeObject(self.date, forKey: "date")
+        aCoder.encodeObject(self.docket, forKey: "docket")
+        aCoder.encodeObject(self.name, forKey: "name")
+        aCoder.encodeObject(self.summary, forKey: "summary")
+        aCoder.encodeObject(self.author, forKey: "author")
+        aCoder.encodeObject(self.volumePrint, forKey: "volumePrint")
+        aCoder.encodeObject(self.href, forKey: "href")
+    }
 }

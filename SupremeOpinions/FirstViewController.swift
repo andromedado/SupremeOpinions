@@ -31,6 +31,12 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         self.button.setTitleColor(UIColor.blueColor(), forState: .Normal)
         self.button.setTitleColor(UIColor.blackColor(), forState: UIControlState.Disabled)
         self.button.addTarget(self, action: "reloadAvailable", forControlEvents: .TouchUpInside)
+        let path = FileManager.instance().availableOpinionsCacheFile
+        if let data = NSData(contentsOfFile: path) {
+            let unarchiver = NSKeyedUnarchiver(forReadingWithData: data)
+            self.available = unarchiver.decodeObjectForKey("available") as Array
+        }
+
     }
 
     func reloadAvailable() -> () {
@@ -47,6 +53,13 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
                 self.button.enabled = true
                 self.tableView.reloadSection(FirstSection.Available)
             })
+            let nsOpinions = opinions as NSArray
+            let path = FileManager.instance().availableOpinionsCacheFile
+            let mutableData = NSMutableData()
+            let archiver = NSKeyedArchiver(forWritingWithMutableData: mutableData)
+            archiver.encodeObject(opinions, forKey: "available")
+            archiver.finishEncoding()
+            let res = mutableData.writeToFile(path, atomically: true)
         }
     }
 
@@ -55,17 +68,10 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
     }
 
     func tableView(tableView: UITableView, accessoryButtonTappedForRowWithIndexPath indexPath: NSIndexPath) {
-        if let section = FirstSection(rawValue: indexPath.section) {
-            if (section == .Available) {
-                if let opinion = self.opinion(forIndexPath: indexPath) {
-                    var name = opinion.name ?? ""
-                    var docket = opinion.docket ?? ""
-                    var alert = UIAlertController(title: "\(name)", message: opinion.summary, preferredStyle: UIAlertControllerStyle.Alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: { (action) -> Void in
-                        self.dismissViewControllerAnimated(true, completion: nil)
-                    }))
-                    self.presentViewController(alert, animated: true, completion: nil)
-                }
+        if (indexPath.section == 1) {
+            if let opinion = self.opinion(forIndexPath: indexPath) {
+                var alert = UIAlertView(title: opinion.name, message: opinion.summary, delegate: nil, cancelButtonTitle: "OK")
+                alert.show()
             }
         }
     }
