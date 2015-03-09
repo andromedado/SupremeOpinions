@@ -14,6 +14,7 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate
 {
     private let slipsURL = NSURL(string: "http://www.supremecourt.gov/opinions/slipopinions.aspx")!
     private var session : NSURLSession!
+    private var tasks : [String : (NSURLSessionDataTask, [(NSData?, NSError?) -> ()])] = [:]
 
     class func instance () -> Fetcher {
         return privateInstance
@@ -22,6 +23,27 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate
     override init() {
         super.init()
         self.session = NSURLSession(configuration: nil, delegate: self, delegateQueue: nil)
+    }
+
+    func fetch(#opinion: Opinion, callback:(NSData?, NSError?) -> ()) -> () {
+        if (opinion.href?.absoluteString? == nil) {
+            return
+        }
+        let url = opinion.href!
+        let key = url.absoluteString!
+        if var tuple = self.tasks[key] {
+            tuple.1.append(callback)
+            return
+        }
+        let task = self.session.dataTaskWithURL(url, completionHandler: { (data, res, err) -> Void in
+            let tuple = privateInstance.tasks[key]!
+            privateInstance.tasks.removeValueForKey(key)
+            for callback in tuple.1 {
+                callback(data, err)
+            }
+        })
+        self.tasks[key] = (task, [callback])
+        task.resume()
     }
 
     func fetchAvailableOpinions (completionBlock: (opinions:[Opinion]) -> ()) -> () {
