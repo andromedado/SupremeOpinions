@@ -14,7 +14,7 @@ enum FirstSection : Int, intValuable {
     case NumSections
 }
 
-class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDataSource
+class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, ReloadTableViewCellDelegate
 {
 
     @IBOutlet weak var tableView: UITableView!
@@ -25,32 +25,29 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        self.button = UIButton()
-        self.button.setTitle("Reload", forState: .Normal)
-        self.button.setTitleColor(UIColor.blueColor(), forState: .Normal)
-        self.button.setTitleColor(UIColor.blackColor(), forState: UIControlState.Disabled)
-        self.button.addTarget(self, action: "reloadAvailable", forControlEvents: .TouchUpInside)
+
         let path = FileManager.instance().availableOpinionsCacheFile
         if let data = NSData(contentsOfFile: path) {
             let unarchiver = NSKeyedUnarchiver(forReadingWithData: data)
             self.available = unarchiver.decodeObjectForKey("available") as Array
         }
-
+        ReloadTableViewCell.registerWithTableView(tableView)
     }
 
-    func reloadAvailable() -> () {
+
+
+    func buttonTap(cell: ReloadTableViewCell) {
         if ((self.reloading) != nil && self.reloading!) {
             return
         }
-        self.button.enabled = false
+        cell.button.enabled = false
         println("RELOAD")
         self.reloading = true
         Fetcher.instance().fetchAvailableOpinions { (opinions) -> () in
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 self.available = opinions
                 self.reloading = false
-                self.button.enabled = true
+                cell.button.enabled = true
                 self.tableView.reloadSection(FirstSection.Available)
             })
             let nsOpinions = opinions as NSArray
@@ -106,16 +103,19 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
     }
 
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
+        var cell = UITableViewCell()
 
         let fullWidth = self.tableView.bounds.width
         if (indexPath.section == 0) {
-            self.button?.frame = CGRect(x: 0, y: 0, width: fullWidth, height: cell.bounds.height)
-            cell.addSubview(self.button)
-            let xConstraint = NSLayoutConstraint(item: cell, attribute: NSLayoutAttribute.CenterX, relatedBy: NSLayoutRelation.Equal, toItem: button, attribute: NSLayoutAttribute.CenterX, multiplier: 1.0, constant: 0.0)
-            cell.addConstraint(xConstraint)
-            let yConstraint = NSLayoutConstraint(item: cell, attribute: NSLayoutAttribute.CenterY, relatedBy: NSLayoutRelation.Equal, toItem: button, attribute: NSLayoutAttribute.CenterY, multiplier: 1.0, constant: 0.0)
-            cell.addConstraint(yConstraint)
+//            self.button?.frame = CGRect(x: 0, y: 0, width: fullWidth, height: cell.bounds.height)
+//            cell.addSubview(self.button)
+//            let xConstraint = NSLayoutConstraint(item: cell, attribute: NSLayoutAttribute.CenterX, relatedBy: NSLayoutRelation.Equal, toItem: button, attribute: NSLayoutAttribute.CenterX, multiplier: 1.0, constant: 0.0)
+//            cell.addConstraint(xConstraint)
+//            let yConstraint = NSLayoutConstraint(item: cell, attribute: NSLayoutAttribute.CenterY, relatedBy: NSLayoutRelation.Equal, toItem: button, attribute: NSLayoutAttribute.CenterY, multiplier: 1.0, constant: 0.0)
+//            cell.addConstraint(yConstraint)
+            let reloadCell = ReloadTableViewCell.dequeueFromTableView(tableView) as ReloadTableViewCell
+            reloadCell.delegate = self;
+            cell = reloadCell;
         } else {
             self.updateCell(cell, atIndexPath: indexPath)
         }
