@@ -44,8 +44,7 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         self.reloading = true
         cell.progressBar.progress = 0
         cell.progressBar.hidden = false
-        Fetcher.instance().availableOpinionsPromise().then({ (res) -> AnyObject? in
-            var opinions = res as [Opinion]
+        Fetcher.instance().availableOpinionsPromise().then({ (opinions) -> AnyObject? in
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 self.available = opinions
                 self.reloading = false

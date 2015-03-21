@@ -22,36 +22,37 @@ private enum State {
     case Pending, Fulfilled, Rejected
 }
 
-class Promise : Thenable
+class Promise<R, E>// : Thenable
 {
     //Consumer need not hold on to me after creating me,
     //But I need to hang around until resolution
     private var strongReference : Promise?
 
     private var state : State = .Pending
-    private var finalResolution : AnyObject?
+    private var finalResolution : R?
+    private var finalError : E?
 
-    private var successCallbacks : [VoidCallback] = []
-    private var failureCallbacks : [VoidCallback] = []
+    private var successCallbacks : [(R) -> ()] = []
+    private var failureCallbacks : [(E) -> ()] = []
 
-    init(executor: Executor) {
+    init(executor: ((R) -> (), (E) -> ()) -> ()) {
         weak var weakSelf = self
         strongReference = self
         executor({ (resolution) in
             if let strongSelf = weakSelf {
-                strongSelf.setState(.Fulfilled, with: resolution)
+                strongSelf.setState(.Fulfilled, resolution: resolution, error: nil)
                 strongSelf.strongReference = nil
             }
             }, {  (rejection) in
                 if let strongSelf = weakSelf {
-                    strongSelf.setState(.Rejected, with: rejection)
+                    strongSelf.setState(.Rejected, resolution: nil, error: rejection)
                     strongSelf.strongReference = nil
                 }
         })
     }
 
-    func then(callback: Callback) -> protocol<Thenable> {
-        return Promise({ (resolver, rejector) -> () in
+    func then<A>(callback: (R) -> A) -> Promise<A, E> {
+        return Promise<A, E>({ (resolver, rejector) -> () in
             switch (self.state) {
             case .Pending:
                 self.successCallbacks.append({ (res) in
@@ -61,15 +62,15 @@ class Promise : Thenable
                     rejector(err)
                 })
             case .Fulfilled:
-                resolver(callback(self.finalResolution))
+                resolver(callback(self.finalResolution!))
             case .Rejected:
-                rejector(self.finalResolution)
+                rejector(self.finalError!)
             }
         })
     }
 
-    func then(callback: Callback, errorCallback: Callback) -> protocol<Thenable> {
-        return Promise({ (resolver, rejector) -> () in
+    func then<A, B>(callback: (R) -> A, errorCallback: (E) -> B) -> Promise<A, B> {
+        return Promise<A, B>({ (resolver, rejector) -> () in
             switch (self.state) {
             case .Pending:
                 self.successCallbacks.append({ (res) in
@@ -79,28 +80,28 @@ class Promise : Thenable
                     rejector(errorCallback(err))
                 })
             case .Fulfilled:
-                resolver(callback(self.finalResolution))
+                resolver(callback(self.finalResolution!))
             case .Rejected:
-                rejector(errorCallback(self.finalResolution))
+                rejector(errorCallback(self.finalError!))
             }
         })
     }
 
-    private func setState(state: State, with resolution:AnyObject?) {
+    private func setState(state: State, resolution:R?, error:E?) {
         if (self.state != .Pending) {
             println("***This promise is already settled")
             return
         }
-        if let furtherPromise = resolution as? Thenable {
+        if let furtherPromise = resolution as? Promise {
             weak var weakSelf = self
             furtherPromise.then({ (res) -> AnyObject? in
                 if let strongSelf = weakSelf {
-                    strongSelf.setState(.Fulfilled, with: res)
+                    strongSelf.setState(.Fulfilled, resolution: res, error: nil)
                 }
                 return nil
             }, errorCallback: { (err) -> AnyObject? in
                 if let strongSelf = weakSelf {
-                    strongSelf.setState(.Rejected, with: err)
+                    strongSelf.setState(.Rejected, resolution: nil, error: err)
                 }
                 return nil
             })
@@ -110,17 +111,18 @@ class Promise : Thenable
         self.state = state
         switch (self.state) {
         case .Rejected:
+            self.finalError = error
             for failure in self.failureCallbacks {
-                failure(resolution)
+                failure(error!)
             }
         case .Fulfilled:
+            self.finalResolution = resolution
             for success in self.successCallbacks {
-                success(resolution)
+                success(resolution!)
             }
         default:
             ()
         }
-        self.finalResolution = resolution
         self.successCallbacks = []
         self.failureCallbacks = []
     }

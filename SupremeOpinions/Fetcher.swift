@@ -46,8 +46,8 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLS
         task.resume()
     }
 
-    func availableOpinionsPromise() -> Promise {
-        return Promise(executor: { (success, failure) -> () in
+    func availableOpinionsPromise() -> Promise<[Opinion],NSError> {
+        return Promise<[Opinion],NSError>(executor: { (success, failure) -> () in
             let task = self.session.dataTaskWithURL(self.slipsURL, completionHandler: { (data, res, err) -> Void in
                 if (err != nil) {
                     failure(err)
@@ -57,7 +57,7 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLS
                 if let resStr = NSString(data: data, encoding: NSUTF8StringEncoding) {
                     success(Extractor.extract(resStr))
                 } else {
-                    failure("Couldn't construct string from data")
+                    failure(NSError(domain: "me", code: 1, userInfo: ["reason" : "Couldn't construct string from data"]))
                 }
             })
             task.resume()
