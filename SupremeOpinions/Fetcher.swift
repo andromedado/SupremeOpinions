@@ -10,7 +10,7 @@ import Foundation
 
 private let privateInstance : Fetcher = Fetcher()
 
-class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate
+class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLSessionDownloadDelegate
 {
     private let slipsURL = NSURL(string: "http://www.supremecourt.gov/opinions/slipopinions.aspx")!
     private var session : NSURLSession!
@@ -47,6 +47,9 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate
     }
 
     func fetchAvailableOpinions (completionBlock: (opinions:[Opinion]) -> ()) -> () {
+//        let altTask = self.session.downloadTaskWithURL(self.slipsURL)
+//        altTask.resume()
+//        println(altTask)
         let task = self.session.dataTaskWithURL(self.slipsURL, completionHandler: { (data, res, err) -> Void in
             var opinions : [Opinion] = []
             if let resStr = NSString(data: data, encoding: NSUTF8StringEncoding) {
@@ -58,15 +61,33 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate
     }
 
     func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveResponse response: NSURLResponse, completionHandler: (NSURLSessionResponseDisposition) -> Void) {
-        println("RESPONSE!")
+        println("RESPONSE! \(dataTask)")
+        if let httpRes = response as? NSHTTPURLResponse {
+            println("HEADERS: \(httpRes.allHeaderFields)")
+        }
+        completionHandler(NSURLSessionResponseDisposition.BecomeDownload)//NSURLSessionResponseDisposition
     }
 
     func URLSession(session: NSURLSession, dataTask: NSURLSessionDataTask, didReceiveData data: NSData) {
-        println("DATA!")
+        println("DATA! \(dataTask) \(data.length)bytes!")
+        let resString = NSString(data: data, encoding: NSUTF8StringEncoding)
+//        println(resString)
     }
 
     func URLSession(session: NSURLSession, task: NSURLSessionTask, didCompleteWithError error: NSError?) {
-        println("DONE!")
+        println("DONE! \(task)")
+    }
+
+    func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
+        println("didResumeAtOffset!");
+    }
+
+    func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didFinishDownloadingToURL location: NSURL) {
+        println("didFinishDownloadingToURL!");
+    }
+
+    func URLSession(session: NSURLSession, downloadTask: NSURLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        println("didWriteData!");
     }
 
 }

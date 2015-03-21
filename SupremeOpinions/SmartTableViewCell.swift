@@ -12,7 +12,6 @@ import UIKit
 extension UITableViewCell {
 
     class func registerWithTableView(tableView:UITableView) {
-        println(NSStringFromClass(self.classForCoder()))
         tableView.registerNib(UINib(nibName: NSStringFromClass(self.classForCoder()), bundle: nil), forCellReuseIdentifier: NSStringFromClass(self.classForCoder()));
     }
 

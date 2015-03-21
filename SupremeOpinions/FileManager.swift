@@ -9,6 +9,7 @@
 private let rootDir = NSFileManager.defaultManager().URLsForDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)[0] as NSURL
 private let privateOpinionDir = rootDir.URLByAppendingPathComponent("opinions").path!
 private let privateCacheDir = rootDir.URLByAppendingPathComponent("cache").path!
+private let privateDBDir = rootDir.URLByAppendingPathComponent("dbs").path!
 
 private let privateInstance = FileManager()
 
@@ -17,7 +18,7 @@ import Foundation
 class FileManager
 {
     init() {
-        self.ensureDirs([opinionDir, cacheDir])
+        self.ensureDirs([opinionDir, cacheDir, dbDir])
     }
 
     private func ensureDirs(dirs:[String]) -> () {
@@ -36,6 +37,12 @@ class FileManager
     var availableOpinionsCacheFile : String {
         get {
             return cacheDir.stringByAppendingPathComponent("avop.cache")
+        }
+    }
+
+    var dbDir : String {
+        get {
+            return privateDBDir
         }
     }
 

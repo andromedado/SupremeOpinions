@@ -41,14 +41,19 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
             return
         }
         cell.button.enabled = false
-        println("RELOAD")
         self.reloading = true
+        cell.progressBar.progress = 0
+        cell.progressBar.hidden = false
         Fetcher.instance().fetchAvailableOpinions { (opinions) -> () in
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 self.available = opinions
                 self.reloading = false
                 cell.button.enabled = true
+                cell.progressBar.setProgress(1, animated: true)
                 self.tableView.reloadSection(FirstSection.Available)
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 1 * 1000000000), dispatch_get_main_queue(), { () -> Void in
+                    cell.progressBar.hidden = true
+                })
             })
             let nsOpinions = opinions as NSArray
             let path = FileManager.instance().availableOpinionsCacheFile
