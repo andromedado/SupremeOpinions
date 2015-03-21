@@ -44,7 +44,8 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         self.reloading = true
         cell.progressBar.progress = 0
         cell.progressBar.hidden = false
-        Fetcher.instance().fetchAvailableOpinions { (opinions) -> () in
+        Fetcher.instance().availableOpinionsPromise().then({ (res) -> AnyObject? in
+            var opinions = res as [Opinion]
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 self.available = opinions
                 self.reloading = false
@@ -62,7 +63,14 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
             archiver.encodeObject(opinions, forKey: "available")
             archiver.finishEncoding()
             let res = mutableData.writeToFile(path, atomically: true)
-        }
+            return nil
+        }, errorCallback: { (error) -> AnyObject? in
+            println("Promise Rejected")
+            println(error)
+            return nil
+        })
+//        Fetcher.instance().fetchAvailableOpinions { (opinions) -> () in
+//        }
     }
 
     func tableView(tableView: UITableView, shouldHighlightRowAtIndexPath indexPath: NSIndexPath) -> Bool {

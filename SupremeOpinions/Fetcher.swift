@@ -46,6 +46,24 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLS
         task.resume()
     }
 
+    func availableOpinionsPromise() -> Promise {
+        return Promise(executor: { (success, failure) -> () in
+            let task = self.session.dataTaskWithURL(self.slipsURL, completionHandler: { (data, res, err) -> Void in
+                if (err != nil) {
+                    failure(err)
+                    return
+                }
+                var opinions : [Opinion] = []
+                if let resStr = NSString(data: data, encoding: NSUTF8StringEncoding) {
+                    success(Extractor.extract(resStr))
+                } else {
+                    failure("Couldn't construct string from data")
+                }
+            })
+            task.resume()
+        })
+    }
+
     func fetchAvailableOpinions (completionBlock: (opinions:[Opinion]) -> ()) -> () {
 //        let altTask = self.session.downloadTaskWithURL(self.slipsURL)
 //        altTask.resume()

@@ -4,7 +4,7 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>Pods-SupremeOpinions-sqlite3.xcscheme</key>
+		<key>Pods-SupremeOpinions-FMDB.xcscheme</key>
 		<dict>
 			<key>isShown</key>
 			<false/>
@@ -17,12 +17,12 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>533B2125FEBA3578FF6D4482</key>
+		<key>62631CA8FE6020A9FB1EB443</key>
 		<dict>
 			<key>primary</key>
 			<true/>
 		</dict>
-		<key>F2AD34D8F157D9C30A787D3F</key>
+		<key>FA4AB7105165DAFE06CC1DCE</key>
 		<dict>
 			<key>primary</key>
 			<true/>

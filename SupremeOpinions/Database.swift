@@ -12,12 +12,13 @@ private let _opinionsDb = Database(name: "opinions")
 
 class Database {
     let name : String
-    let dbPath : String
+    private let dbPath : String
+    private let db : FMDatabase
 
     init(name:String) {
         self.name = name
         dbPath = FileManager.instance().dbDir.stringByAppendingPathComponent(name + ".db")
-//        var sqlite3Database : sqlite3
+        db = FMDatabase(path: dbPath)
     }
 
     class func opinionsDb() -> Database {

@@ -3,7 +3,7 @@
 
 target 'SupremeOpinions' do
 
-pod 'sqlite3'
+pod 'FMDB'
 
 end
 
