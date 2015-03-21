@@ -17,7 +17,7 @@ class Database {
     init(name:String) {
         self.name = name
         dbPath = FileManager.instance().dbDir.stringByAppendingPathComponent(name + ".db")
-        var sqlite3Database : sqlite3
+//        var sqlite3Database : sqlite3
     }
 
     class func opinionsDb() -> Database {
