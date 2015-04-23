@@ -29,7 +29,7 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         let path = FileManager.instance().availableOpinionsCacheFile
         if let data = NSData(contentsOfFile: path) {
             let unarchiver = NSKeyedUnarchiver(forReadingWithData: data)
-            self.available = unarchiver.decodeObjectForKey("available") as Array
+            self.available = unarchiver.decodeObjectForKey("available") as! Array
         }
         ReloadTableViewCell.registerWithTableView(tableView)
     }
@@ -44,7 +44,7 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         self.reloading = true
         cell.progressBar.progress = 0
         cell.progressBar.hidden = false
-        Fetcher.instance().availableOpinionsPromise().then({ (opinions) -> AnyObject? in
+        var promise = Fetcher.instance().availableOpinionsPromise().then({ (opinions) -> AnyObject? in
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 self.available = opinions
                 self.reloading = false
@@ -68,8 +68,6 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
             println(error)
             return nil
         })
-//        Fetcher.instance().fetchAvailableOpinions { (opinions) -> () in
-//        }
     }
 
     func tableView(tableView: UITableView, shouldHighlightRowAtIndexPath indexPath: NSIndexPath) -> Bool {
@@ -110,7 +108,7 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
             opinion.download({ (err) -> () in
                 let cell = tableView.cellForRowAtIndexPath(indexPath)
                 self.updateCell(cell, atIndexPath: indexPath)
-            }, nil)
+            }, progress: nil)
         }
     }
 
@@ -125,7 +123,7 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
 //            cell.addConstraint(xConstraint)
 //            let yConstraint = NSLayoutConstraint(item: cell, attribute: NSLayoutAttribute.CenterY, relatedBy: NSLayoutRelation.Equal, toItem: button, attribute: NSLayoutAttribute.CenterY, multiplier: 1.0, constant: 0.0)
 //            cell.addConstraint(yConstraint)
-            let reloadCell = ReloadTableViewCell.dequeueFromTableView(tableView) as ReloadTableViewCell
+            let reloadCell = ReloadTableViewCell.dequeueFromTableView(tableView) as! ReloadTableViewCell
             reloadCell.delegate = self;
             cell = reloadCell;
         } else {

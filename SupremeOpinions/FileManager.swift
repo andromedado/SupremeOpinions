@@ -6,7 +6,7 @@
 //
 //
 
-private let rootDir = NSFileManager.defaultManager().URLsForDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)[0] as NSURL
+private let rootDir = NSFileManager.defaultManager().URLsForDirectory(NSSearchPathDirectory.ApplicationSupportDirectory, inDomains: NSSearchPathDomainMask.UserDomainMask)[0] as! NSURL
 private let privateOpinionDir = rootDir.URLByAppendingPathComponent("opinions").path!
 private let privateCacheDir = rootDir.URLByAppendingPathComponent("cache").path!
 private let privateDBDir = rootDir.URLByAppendingPathComponent("dbs").path!

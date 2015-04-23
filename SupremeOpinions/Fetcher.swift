@@ -26,7 +26,7 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLS
     }
 
     func fetch(#opinion: Opinion, callback:(NSData?, NSError?) -> ()) -> () {
-        if (opinion.href?.absoluteString? == nil) {
+        if (opinion.href?.absoluteString == nil) {
             return
         }
         let url = opinion.href!
@@ -55,7 +55,7 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLS
                 }
                 var opinions : [Opinion] = []
                 if let resStr = NSString(data: data, encoding: NSUTF8StringEncoding) {
-                    success(Extractor.extract(resStr))
+                    success(Extractor.extract(resStr as String))
                 } else {
                     failure(NSError(domain: "me", code: 1, userInfo: ["reason" : "Couldn't construct string from data"]))
                 }
@@ -71,7 +71,7 @@ class Fetcher : NSObject, NSURLSessionDelegate, NSURLSessionDataDelegate, NSURLS
         let task = self.session.dataTaskWithURL(self.slipsURL, completionHandler: { (data, res, err) -> Void in
             var opinions : [Opinion] = []
             if let resStr = NSString(data: data, encoding: NSUTF8StringEncoding) {
-                opinions = Extractor.extract(resStr)
+                opinions = Extractor.extract(resStr as String)
             }
             completionBlock(opinions: opinions)
         })
