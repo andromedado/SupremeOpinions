@@ -6,36 +6,31 @@
 //
 //
 
-import Foundation
-
-typealias Callback = (AnyObject?) -> AnyObject?
-typealias VoidCallback = (AnyObject?) -> ()
-typealias Executor = (VoidCallback, VoidCallback) -> ()
-
-@objc
 protocol Thenable {
-    func then(callback : Callback) -> protocol<Thenable>;
-    func then(callback : Callback, errorCallback : Callback) -> protocol<Thenable>;
+    typealias 😃
+    typealias 😱
+    func then<😺>(callback : (😃) -> 😺) -> Promise<😺, 😱>;
+    func then<😺, 🙀>(callback : (😃) -> 😺, errorCallback : (😱) -> 🙀) -> Promise<😺, 🙀>;
 }
 
 private enum State {
     case Pending, Fulfilled, Rejected
 }
 
-class Promise<R, E>// : Thenable
+class Promise<😃, 😱> : Thenable
 {
     //Consumer need not hold on to me after creating me,
-    //But I need to hang around until resolution
+    //But I need to hang around until resolution - which consumer controls
     private var strongReference : Promise?
 
     private var state : State = .Pending
-    private var finalResolution : R?
-    private var finalError : E?
+    private var finalResolution : 😃?
+    private var finalError : 😱?
 
-    private var successCallbacks : [(R) -> ()] = []
-    private var failureCallbacks : [(E) -> ()] = []
+    private var successCallbacks : [(😃) -> ()] = []
+    private var failureCallbacks : [(😱) -> ()] = []
 
-    init(executor: ((R) -> (), (E) -> ()) -> ()) {
+    init(executor: ((😃) -> (), (😱) -> ()) -> ()) {
         weak var weakSelf = self
         strongReference = self
         executor({ (resolution) in
@@ -51,8 +46,8 @@ class Promise<R, E>// : Thenable
         })
     }
 
-    func then<A>(callback: (R) -> A) -> Promise<A, E> {
-        return Promise<A, E>({ (resolver, rejector) -> () in
+    func then<😺>(callback: (😃) -> 😺) -> Promise<😺, 😱> {
+        return Promise<😺, 😱>(executor: { (resolver, rejector) -> () in
             switch (self.state) {
             case .Pending:
                 self.successCallbacks.append({ (res) in
@@ -62,6 +57,7 @@ class Promise<R, E>// : Thenable
                     rejector(err)
                 })
             case .Fulfilled:
+                println("final resolution \(self.finalResolution)")
                 resolver(callback(self.finalResolution!))
             case .Rejected:
                 rejector(self.finalError!)
@@ -69,8 +65,8 @@ class Promise<R, E>// : Thenable
         })
     }
 
-    func then<A, B>(callback: (R) -> A, errorCallback: (E) -> B) -> Promise<A, B> {
-        return Promise<A, B>({ (resolver, rejector) -> () in
+    func then<😺, 🙀>(callback: (😃) -> 😺, errorCallback: (😱) -> 🙀) -> Promise<😺, 🙀> {
+        return Promise<😺, 🙀>(executor: { (resolver, rejector) -> () in
             switch (self.state) {
             case .Pending:
                 self.successCallbacks.append({ (res) in
@@ -80,6 +76,7 @@ class Promise<R, E>// : Thenable
                     rejector(errorCallback(err))
                 })
             case .Fulfilled:
+                println("final resolution \(self.finalResolution)")
                 resolver(callback(self.finalResolution!))
             case .Rejected:
                 rejector(errorCallback(self.finalError!))
@@ -87,11 +84,12 @@ class Promise<R, E>// : Thenable
         })
     }
 
-    private func setState(state: State, resolution:R?, error:E?) {
+    private func setState(state: State, resolution:😃?, error:😱?) {
         if (self.state != .Pending) {
             println("***This promise is already settled")
             return
         }
+//        if resolution is Thenable {
         if let furtherPromise = resolution as? Promise {
             weak var weakSelf = self
             furtherPromise.then({ (res) -> AnyObject? in
@@ -105,7 +103,7 @@ class Promise<R, E>// : Thenable
                 }
                 return nil
             })
-            println("Further deferred the resolution of this promise because I got a thenable back")
+            println("Further deferred the resolution of this promise because I got a --thenable-- Promise back")
             return
         }
         self.state = state
@@ -128,8 +126,29 @@ class Promise<R, E>// : Thenable
     }
 
     deinit {
-        println("***Promise is de-initializing...")
+//        println("***Promise is de-initializing...")
     }
 
+}
+
+
+func timedSuccessPromise<😃>(delay:NSTimeInterval, success:😃) -> Promise<😃, Void> {
+    return Promise<😃, Void>(executor: { (successCallback, err) -> () in
+        let delayTime = dispatch_time(DISPATCH_TIME_NOW,
+            Int64(delay * Double(NSEC_PER_SEC)))
+        dispatch_after(delayTime, dispatch_get_main_queue()) {
+            successCallback(success)
+        }
+    })
+}
+
+func timedFailurePromise<😱>(delay:NSTimeInterval, failure:😱) -> Promise<Void, 😱> {
+    return Promise<Void, 😱>(executor: { (successCallback, err) -> () in
+        let delayTime = dispatch_time(DISPATCH_TIME_NOW,
+            Int64(delay * Double(NSEC_PER_SEC)))
+        dispatch_after(delayTime, dispatch_get_main_queue()) {
+            err(failure)
+        }
+    })
 }
 
