@@ -33,7 +33,8 @@ class FirstViewController: UIViewController, UITableViewDelegate, UITableViewDat
         }
         ReloadTableViewCell.registerWithTableView(tableView)
 
-        timedSuccessPromise(1, 6).then({ (good) -> Promise<Int, Void> in
+        timedSuccessPromise(1, timedSuccessPromise(2, 6)).then({ (good) -> Promise<Int, Void> in
+            println(good)
             return timedSuccessPromise(2, 7)
         }, errorCallback: { (error) -> Promise<Int, Void> in
             println("first error callback")

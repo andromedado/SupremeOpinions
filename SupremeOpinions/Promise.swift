@@ -90,16 +90,16 @@ class Promise<😃, 😱> : Thenable
             return
         }
 //        if resolution is Thenable {
-        if let furtherPromise = resolution as? Promise {
+        if let furtherPromise = resolution as? Promise<😃, 😱> {
             weak var weakSelf = self
             furtherPromise.then({ (res) -> AnyObject? in
                 if let strongSelf = weakSelf {
-                    strongSelf.setState(.Fulfilled, resolution: res, error: nil)
+                    strongSelf.setState(State.Fulfilled, resolution: res, error: nil)
                 }
                 return nil
             }, errorCallback: { (err) -> AnyObject? in
                 if let strongSelf = weakSelf {
-                    strongSelf.setState(.Rejected, resolution: nil, error: err)
+                    strongSelf.setState(State.Rejected, resolution: nil, error: err)
                 }
                 return nil
             })
